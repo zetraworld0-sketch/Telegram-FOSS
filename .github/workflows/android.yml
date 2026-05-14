@@ -21,18 +21,21 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Fix Legacy JVM Options
-        # This command removes the 'MaxPermSize' which is causing your crash
+      - name: Fix Legacy JVM and Missing Keys
+        # 1. Removes the dead MaxPermSize option
+        # 2. Creates the API_KEYS file that the build is screaming for
         run: |
           sed -i 's/-XX:MaxPermSize=4096m//g' gradle.properties || true
-          sed -i 's/-XX:MaxPermSize=1024m//g' gradle.properties || true
+          touch TMessagesProj/API_KEYS
+          echo "APP_ID=12345" >> TMessagesProj/API_KEYS
+          echo "APP_HASH=abcdef1234567890" >> TMessagesProj/API_KEYS
 
       - name: Grant Permission
         run: chmod +x gradlew
 
-      - name: Build Telegram APK
-        # We pass a clean memory heap directly to override the bad file settings
-        run: ./gradlew assembleDebug -x lint -x test --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
+      - name: Build Netscape APK
+        # We skip lint/tests and override the JVM args to ensure stability
+        run: ./gradlew :TMessagesProj:assembleDebug -x lint -x test --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
 
       - name: Upload Netscape APK
         uses: actions/upload-artifact@v4
