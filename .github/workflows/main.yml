@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: # This adds a manual "Run" button so you don't have to wait
 
 jobs:
   build:
@@ -14,7 +15,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java 17
-        # Note: Most modern Chat repos use Java 17 for stability
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -24,12 +24,12 @@ jobs:
       - name: Grant Permission
         run: chmod +x gradlew
 
-      - name: Build Professional APK
-        # We still skip lint/tests to keep the build time under 10 minutes
+      - name: Build Netscape APK
+        # We skip lint and tests to ensure it builds in minutes, not hours
         run: ./gradlew assembleDebug -x lint -x test --no-daemon
 
-      - name: Upload Netscape Build
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: netscape-chat-apk
+          name: netscape-messenger-apk
           path: app/build/outputs/apk/debug/*.apk
