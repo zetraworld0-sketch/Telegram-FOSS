@@ -1,4 +1,4 @@
-name: Build Netscape APK
+name: Build zetra APK
 
 on:
   push:
