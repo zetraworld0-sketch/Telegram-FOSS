@@ -3,7 +3,7 @@ name: Build Netscape APK
 on:
   push:
     branches:
-      - master # Note: Telegram-FOSS uses 'master' instead of 'main'
+      - master
   workflow_dispatch:
 
 jobs:
@@ -21,17 +21,21 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Fix Legacy JVM Options
+        # This command removes the 'MaxPermSize' which is causing your crash
+        run: |
+          sed -i 's/-XX:MaxPermSize=4096m//g' gradle.properties || true
+          sed -i 's/-XX:MaxPermSize=1024m//g' gradle.properties || true
+
       - name: Grant Permission
         run: chmod +x gradlew
 
       - name: Build Telegram APK
-        # Telegram-FOSS uses 'assembleRelease' or 'assembleDebug'
-        # We skip lint and tests to ensure a fast build
-        run: ./gradlew assembleDebug -x lint -x test --no-daemon
+        # We pass a clean memory heap directly to override the bad file settings
+        run: ./gradlew assembleDebug -x lint -x test --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m"
 
       - name: Upload Netscape APK
         uses: actions/upload-artifact@v4
         with:
           name: netscape-messenger-apk
-          # Telegram's APK path is slightly different than standard apps
           path: TMessagesProj/build/outputs/apk/debug/*.apk
